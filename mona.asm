@@ -1,0 +1,83 @@
+[org 0x7C00]
+[bits 16]
+    push 0xA000
+    pop es
+    mov si, $brush
+    xor cx, cx
+
+    mov ax, 0x0013
+    int 0x10
+
+    mov ebx, 0x7EC80000
+
+part_loop:
+    lodsw
+    mov bx, ax
+
+    mov bp, 64
+    sub bp, cx
+    shl bp, 5
+    mov sp, bp
+
+len_loop:
+    shl ebx, 1
+    jnc not_carry
+    xor ebx, 0x04C11DB7
+    mov dh, bl
+    not_carry:
+
+    and dh, 0x82
+    je dir_00
+    jpe dir_82
+    js dir_80
+    dir_02:
+        inc al  
+        jmp dir_end
+    dir_82:
+        dec al
+        jmp dir_end
+    dir_00:
+        inc ah
+        jmp dir_end 
+    dir_80:
+        dec ah  
+    dir_end:
+
+    and ax, 0x7F7F
+    cmp ah, 96
+    jae skip
+
+    movzx di, ah
+    movzx bp, al
+    imul di, 320
+    add di, bp
+    mov bp, cx
+    and bp, 3
+    mov dl, byte[bp + color]
+    mov [es:di], dl
+    skip:
+
+    dec sp
+    jnz len_loop
+    inc cx
+    cmp cx, 64
+    jl part_loop    
+    jmp $
+
+color:
+    db 0x43, 0x42, 0x06, 0x00
+
+brush:
+    dw  0x030A, 0x37BE, 0x2F9B, 0x072B, 0x0E3C, 0xF59B, 0x8A91, 0x1B0B
+    dw  0x0EBD, 0x9378, 0xB83E, 0xB05A, 0x70B5, 0x0280, 0xD0B1, 0x9CD2
+    dw  0x2093, 0x209C, 0x3D11, 0x26D6, 0xDF19, 0x97F5, 0x90A3, 0xA347
+    dw  0x8AF7, 0x0859, 0x29AD, 0xA32C, 0x7DFC, 0x0D7D, 0xD57A, 0x3051
+    dw  0xD431, 0x542B, 0xB242, 0xB114, 0x8A96, 0x2914, 0xB0F1, 0x532C
+    dw  0x0413, 0x0A09, 0x3EBB, 0xE916, 0x1877, 0xB8E2, 0xAC72, 0x80C7
+    dw  0x5240, 0x8D3C, 0x3EAF, 0xAD63, 0x1E14, 0xB23D, 0x238F, 0xC07B
+    dw  0xAF9D, 0x312E, 0x96CE, 0x25A7, 0x9E37, 0x2C44, 0x2BB9, 0x2139
+
+
+times 510 - ($-$$) db 0
+DB 0x55
+DB 0xAA
